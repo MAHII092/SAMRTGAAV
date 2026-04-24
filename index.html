@@ -8,14 +8,17 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial;background:linear-gradient(135deg,#0f172a,#064e3b);color:white;min-height:100vh}
     .center{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-    .card{width:100%;max-width:430px;background:rgba(255,255,255,.12);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:26px;padding:25px}
+    .card,.pageCard{background:rgba(255,255,255,.12);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:18px;margin-bottom:12px}
+    .card{width:100%;max-width:430px;padding:25px}
     .logo,.miniLogo{background:#22c55e;display:flex;align-items:center;justify-content:center;font-weight:900}
     .logo{width:70px;height:70px;border-radius:22px;font-size:28px;margin-bottom:15px}
     .miniLogo{width:48px;height:48px;border-radius:16px;font-size:20px}
     input,select,button{width:100%;padding:14px;margin:8px 0;border-radius:15px;border:0;font-size:15px}
     input,select{background:white;color:#111}
     button{background:#22c55e;color:white;font-weight:bold;cursor:pointer}
-    .logout{background:#ef4444}
+    .red{background:#ef4444}
+    .blue{background:#3b82f6}
+    .orange{background:#f97316}
     .hidden{display:none}
     .small{font-size:13px;color:#d1fae5}
     .top{padding:18px;max-width:900px;margin:auto;padding-bottom:95px}
@@ -30,10 +33,12 @@
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
     .tile{background:rgba(255,255,255,.15);padding:18px;border-radius:20px;text-align:center;border:1px solid rgba(255,255,255,.18);cursor:pointer;min-height:88px}
     .tile span{font-size:26px}
-    .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:20px;max-height:520px;overflow:auto}
+    .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:20px;max-height:560px;overflow:auto}
     .item{background:rgba(255,255,255,.12);padding:12px;border-radius:15px;margin-bottom:10px;text-align:left}
     .proofImg{width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:10px;border:1px solid rgba(255,255,255,.2)}
-    a{color:#86efac}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .badge{background:rgba(34,197,94,.25);padding:6px 10px;border-radius:999px;font-size:12px}
+    a{color:#86efac;text-decoration:none}
     .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px}
     .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px;border-radius:14px}
   </style>
@@ -81,7 +86,7 @@
       <div class="tile" onclick="showYojana()"><span>🏛️</span><br>Yojana</div>
       <div class="tile" onclick="showDirectory()"><span>🏪</span><br>Directory</div>
       <div id="adminTile" class="tile hidden" onclick="showAdmin()"><span>👑</span><br>Admin</div>
-      <div class="tile logout" onclick="logout()"><span>🚪</span><br>Logout</div>
+      <div class="tile red" onclick="logout()"><span>🚪</span><br>Logout</div>
     </div>
 
     <div id="contentBox" class="list hidden"></div>
@@ -176,7 +181,6 @@ function enableNotifications(){
   }else{
     alert("Sound allowed ✅");
   }
-
   playBeep();
 }
 
@@ -190,10 +194,7 @@ function playBeep(){
     oscillator.frequency.value = 880;
     gain.gain.value = 0.08;
     oscillator.start();
-    setTimeout(() => {
-      oscillator.stop();
-      audioCtx.close();
-    }, 250);
+    setTimeout(() => { oscillator.stop(); audioCtx.close(); }, 250);
   }catch(e){}
 }
 
@@ -254,7 +255,6 @@ function showNoticeList(){
 
   if(latest && lastNotice !== latest.title){
     localStorage.setItem("last_notice_title", latest.title);
-
     if(soundAllowed) playBeep();
 
     if("Notification" in window && Notification.permission === "granted"){
@@ -269,14 +269,10 @@ setInterval(loadNotices, 60000);
 
 function getDirectImageLink(link){
   if(!link) return "";
-
   if(link.includes("drive.google.com")){
     let match = link.match(/[-\w]{25,}/);
-    if(match){
-      return "https://drive.google.com/uc?export=view&id=" + match[0];
-    }
+    if(match) return "https://drive.google.com/uc?export=view&id=" + match[0];
   }
-
   return link;
 }
 
@@ -362,24 +358,79 @@ function filterComplaints(){
   document.getElementById("statusFilter").value=status;
 }
 
-function showEmergency(){
-  alert("🚨 Emergency Contacts:\nAmbulance: 108\nPolice: 100\nSarpanch: 98xxxxxxx\nDoctor: 99xxxxxxx");
+function showPage(title, html){
+  const box = document.getElementById("contentBox");
+  box.classList.remove("hidden");
+  box.innerHTML = `<h3>${title}</h3>${html}`;
 }
 
 function showProfile(){
-  alert("👤 Profile:\nName: "+currentUser.name+"\nID: "+currentUser.id+"\nMobile: "+currentUser.mobile+"\nAddress: "+currentUser.address);
+  showPage("👤 My Profile", `
+    <div class="pageCard">
+      <div class="row">
+        <div>
+          <h2 style="margin:0">${currentUser.name}</h2>
+          <p class="small">${currentUser.role}</p>
+        </div>
+        <span class="badge">${currentUser.id}</span>
+      </div>
+      <hr>
+      <p>📱 Mobile: ${currentUser.mobile}</p>
+      <p>🏠 Address: ${currentUser.address}</p>
+      <p>🔐 Login Type: Admin Created ID</p>
+    </div>
+  `);
+}
+
+function showEmergency(){
+  showPage("🚨 Emergency Contacts", `
+    <div class="pageCard">
+      <h3>Ambulance</h3>
+      <p>Emergency Medical Help</p>
+      <a href="tel:108"><button class="red">📞 Call 108</button></a>
+    </div>
+    <div class="pageCard">
+      <h3>Police</h3>
+      <p>Police emergency contact</p>
+      <a href="tel:100"><button class="blue">📞 Call 100</button></a>
+    </div>
+    <div class="pageCard">
+      <h3>Sarpanch</h3>
+      <p>Gram Panchayat contact</p>
+      <a href="tel:9800000000"><button>📞 Call Sarpanch</button></a>
+    </div>
+    <div class="pageCard">
+      <h3>Doctor</h3>
+      <p>Village doctor contact</p>
+      <a href="tel:9900000000"><button class="orange">📞 Call Doctor</button></a>
+    </div>
+  `);
 }
 
 function showYojana(){
-  alert("🏛️ Sarkari Yojana:\nPM Awas Yojana\nRation Card\nFarmer Scheme\nScholarship");
+  showPage("🏛️ Sarkari Yojana", `
+    <div class="pageCard"><h3>PM Awas Yojana</h3><p>घरकुल योजनेसाठी documents: Aadhaar, ration card, income proof.</p></div>
+    <div class="pageCard"><h3>Farmer Scheme</h3><p>शेतकरी योजनांची माहिती आणि अर्जासाठी ग्रामपंचायत संपर्क.</p></div>
+    <div class="pageCard"><h3>Scholarship</h3><p>Students साठी scholarship updates आणि documents guide.</p></div>
+    <div class="pageCard"><h3>Ration Card</h3><p>नवीन/दुरुस्ती ration card process information.</p></div>
+  `);
 }
 
 function showDirectory(){
-  alert("🏪 Gaav Directory:\nKirana Store\nMedical\nElectrician\nPlumber\nTractor Service");
+  showPage("🏪 Gaav Directory", `
+    <div class="pageCard"><h3>Medical Store</h3><p>Contact: 98xxxxxxx</p><a href="tel:9800000000"><button>Call</button></a></div>
+    <div class="pageCard"><h3>Electrician</h3><p>Contact: 97xxxxxxx</p><a href="tel:9700000000"><button>Call</button></a></div>
+    <div class="pageCard"><h3>Plumber</h3><p>Contact: 96xxxxxxx</p><a href="tel:9600000000"><button>Call</button></a></div>
+    <div class="pageCard"><h3>Tractor Service</h3><p>Contact: 95xxxxxxx</p><a href="tel:9500000000"><button>Call</button></a></div>
+  `);
 }
 
 function showAdmin(){
-  alert("👑 Admin Panel:\nAll complaints + stats active.\nProof image preview + notice sound active.");
+  showPage("👑 Admin Panel", `
+    <div class="pageCard"><h3>Dashboard</h3><p>All complaints + stats active आहेत.</p></div>
+    <div class="pageCard"><h3>Notice System</h3><p>Notice Google Sheet मधून live येते.</p></div>
+    <div class="pageCard"><h3>User Control</h3><p>Signup बंद आहे. User ID admin create करतो.</p></div>
+  `);
 }
 </script>
 

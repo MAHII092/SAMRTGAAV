@@ -144,8 +144,10 @@ function goHome(){
   document.getElementById("complaintBox").classList.add("hidden");
 }
 
+<script>
 function openComplaint(){
-  window.open(GOOGLE_FORM_LINK, "_blank");
+  let formLink = "https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=pp_url&entry.1114604525=" + encodeURIComponent(currentUser.id);
+  window.open(formLink, "_blank");
 }
 
 function loadComplaints(showBox=true){

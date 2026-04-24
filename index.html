@@ -11,14 +11,13 @@
     }
     .center{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
     .card{
-      width:100%;max-width:420px;background:rgba(255,255,255,.12);
+      width:100%;max-width:430px;background:rgba(255,255,255,.12);
       backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);
       border-radius:25px;padding:25px;box-shadow:0 20px 60px rgba(0,0,0,.35)
     }
     input,button{
       width:100%;padding:14px;margin:10px 0;border-radius:14px;border:0;font-size:16px
     }
-    input{background:white;color:#111}
     button{background:#22c55e;color:white;font-weight:bold;cursor:pointer}
     .logout{background:#ef4444}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
@@ -30,6 +29,14 @@
     .hidden{display:none}
     h1,h2,p{margin-top:0}
     .small{font-size:13px;color:#d1fae5}
+    .list{
+      margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:18px;
+      max-height:430px;overflow:auto;
+    }
+    .item{
+      background:rgba(255,255,255,.12);padding:12px;border-radius:14px;margin-bottom:10px;
+      text-align:left;border:1px solid rgba(255,255,255,.15)
+    }
   </style>
 </head>
 <body>
@@ -37,11 +44,11 @@
 <div id="loginPage" class="center">
   <div class="card">
     <h1>🌿 Smart Gaav</h1>
-    <p class="small">GP of Tiru Jal LTR MH</p>
+    <p class="small">Digital Gram Panchayat App</p>
     <input id="userid" placeholder="User ID">
     <input id="password" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
-    <p class="small">User ID admin kadun milel. Signup nahi.</p>
+    <p class="small">Signup nahi. User ID admin kadun milel.</p>
   </div>
 </div>
 
@@ -51,23 +58,30 @@
     <p id="roleText" class="small"></p>
 
     <div class="grid">
-      <div class="tile" onclick="openComplaint()">📸<br>Complaint</div>
+      <div class="tile" onclick="openComplaint()">📸<br>Complaint Tak</div>
+      <div class="tile" onclick="showComplaints()">📋<br>Complaints List</div>
       <div class="tile" onclick="showNotice()">📢<br>Notice</div>
       <div class="tile" onclick="showEmergency()">🚨<br>Emergency</div>
       <div class="tile" onclick="showProfile()">👤<br>Profile</div>
       <div class="tile" onclick="showYojana()">🏛️<br>Yojana</div>
       <div class="tile" onclick="showDirectory()">🏪<br>Directory</div>
       <div id="adminTile" class="tile hidden" onclick="showAdmin()">👑<br>Admin Panel</div>
-      <div class="tile" onclick="logout()">🚪<br>Logout</div>
+      <div class="tile logout" onclick="logout()">🚪<br>Logout</div>
     </div>
+
+    <div id="complaintBox" class="list hidden"></div>
   </div>
 </div>
 
 <script>
+const GOOGLE_FORM_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=header";
+
+const GOOGLE_SHEET_JSON_LINK = "https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/edit?gid=2082167573#gid=2082167573";
+
 let users = [
-  { id:"ADMIN", pass:"1234", name:"Mahesh Admin", mobile:"98xxxx", address:"Tiru Jal", role:"Admin" },
-  { id:"GAAV001", pass:"1234", name:"Ramesh", mobile:"97xxxx", address:"Wasti 1", role:"User" },
-  { id:"GAAV002", pass:"1234", name:"Suresh", mobile:"96xxxx", address:"Wasti 2", role:"User" }
+  { id:"ADMIN", pass:"1234", name:"Mahesh Admin", mobile:"98xxxxxxx", address:"Gaav", role:"Admin" },
+  { id:"GAAV001", pass:"1234", name:"Ramesh", mobile:"97xxxxxxx", address:"Wasti 1", role:"User" },
+  { id:"GAAV002", pass:"1234", name:"Suresh", mobile:"96xxxxxxx", address:"Wasti 2", role:"User" }
 ];
 
 let currentUser = null;
@@ -112,31 +126,88 @@ function logout(){
 }
 
 function openComplaint(){
-  window.open("https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=header", "_blank");
+  if(GOOGLE_FORM_LINK.includes("PASTE_")){
+    alert("Google Form link code madhe paste kara.");
+    return;
+  }
+  window.open(GOOGLE_FORM_LINK, "_blank");
+}
+
+function showComplaints(){
+  if(currentUser.role !== "Admin"){
+    alert("Fakt Admin complaints list pahu shakto.");
+    return;
+  }
+
+  if(GOOGLE_SHEET_JSON_LINK.includes("PASTE_")){
+    alert("Google Sheet JSON link code madhe paste kara.");
+    return;
+  }
+
+  const box = document.getElementById("complaintBox");
+  box.classList.remove("hidden");
+  box.innerHTML = "Loading complaints...";
+
+  fetch(GOOGLE_SHEET_JSON_LINK)
+    .then(res => res.text())
+    .then(data => {
+      let json = JSON.parse(data.substr(47).slice(0,-2));
+      let rows = json.table.rows;
+
+      let html = "<h3>📋 Complaints List</h3>";
+
+      if(rows.length === 0){
+        html += "<p>No complaints found.</p>";
+      }
+
+      rows.forEach((r, index) => {
+        let userId = r.c[0]?.v || "N/A";
+        let name = r.c[1]?.v || "N/A";
+        let problem = r.c[2]?.v || "N/A";
+        let photo = r.c[3]?.v || "";
+        let date = r.c[4]?.v || "N/A";
+        let status = r.c[5]?.v || "Pending";
+
+        html += `
+          <div class="item">
+            <b>#${index + 1} - ${problem}</b><br>
+            👤 User: ${name} (${userId})<br>
+            📅 Date: ${date}<br>
+            📌 Status: ${status}<br>
+            ${photo ? `<a href="${photo}" target="_blank" style="color:#86efac">📷 View Photo</a>` : ""}
+          </div>
+        `;
+      });
+
+      box.innerHTML = html;
+    })
+    .catch(err => {
+      box.innerHTML = "Error: Sheet link wrong ahe kiwa sheet public nahi.";
+    });
 }
 
 function showNotice(){
-  alert("📢 Notice:\\nAaj Gram Sabha sandhyakali 5 vajta ahe.\\nPani supply udya sakali 7 te 9.");
+  alert("📢 Notice:\nAaj Gram Sabha sandhyakali 5 vajta ahe.\nPani supply udya sakali 7 te 9.");
 }
 
 function showEmergency(){
-  alert("🚨 Emergency Contacts:\\nAmbulance: 108\\nPolice: 100\\nSarpanch: 98xxxxxxx\\nDoctor: 99xxxxxxx");
+  alert("🚨 Emergency Contacts:\nAmbulance: 108\nPolice: 100\nSarpanch: 98xxxxxxx\nDoctor: 99xxxxxxx");
 }
 
 function showProfile(){
-  alert("👤 Profile:\\nName: " + currentUser.name + "\\nID: " + currentUser.id + "\\nMobile: " + currentUser.mobile + "\\nAddress: " + currentUser.address);
+  alert("👤 Profile:\nName: " + currentUser.name + "\nID: " + currentUser.id + "\nMobile: " + currentUser.mobile + "\nAddress: " + currentUser.address);
 }
 
 function showYojana(){
-  alert("🏛️ Sarkari Yojana:\\nPM Awas Yojana\\nRation Card\\nFarmer Scheme\\nScholarship");
+  alert("🏛️ Sarkari Yojana:\nPM Awas Yojana\nRation Card\nFarmer Scheme\nScholarship");
 }
 
 function showDirectory(){
-  alert("🏪 Gaav Directory:\\nKirana Store\\nMedical\\nElectrician\\nPlumber\\nTractor Service");
+  alert("🏪 Gaav Directory:\nKirana Store\nMedical\nElectrician\nPlumber\nTractor Service");
 }
 
 function showAdmin(){
-  alert("👑 Admin Panel:\\nUsers manage\\nComplaints check\\nNotice update\\nActivity tracking");
+  alert("👑 Admin Panel:\nComplaints list paha\nNotice update kara\nUsers manage kara");
 }
 </script>
 

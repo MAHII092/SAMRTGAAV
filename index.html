@@ -3,27 +3,24 @@
 <head>
   <title>Smart Tiruka</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#064e3b">
   <style>
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial;background:linear-gradient(135deg,#0f172a,#064e3b);color:white;min-height:100vh}
     .center{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-    .card,.pageCard{background:rgba(255,255,255,.12);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:18px;margin-bottom:12px}
+    .card,.pageCard{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:18px;margin-bottom:12px}
     .card{width:100%;max-width:430px;padding:25px}
     .logo,.miniLogo{background:#22c55e;display:flex;align-items:center;justify-content:center;font-weight:900}
     .logo{width:70px;height:70px;border-radius:22px;font-size:28px;margin-bottom:15px}
     .miniLogo{width:48px;height:48px;border-radius:16px;font-size:20px}
-    input,select,button{width:100%;padding:14px;margin:8px 0;border-radius:15px;border:0;font-size:15px}
-    input,select{background:white;color:#111}
+    input,select,textarea,button{width:100%;padding:14px;margin:8px 0;border-radius:15px;border:0;font-size:15px}
+    textarea{min-height:80px}
+    input,select,textarea{background:white;color:#111}
     button{background:#22c55e;color:white;font-weight:bold;cursor:pointer}
-    .red{background:#ef4444}
-    .blue{background:#3b82f6}
-    .orange{background:#f97316}
-    .hidden{display:none}
-    .small{font-size:13px;color:#d1fae5}
+    .red{background:#ef4444}.blue{background:#3b82f6}.orange{background:#f97316}
+    .hidden{display:none}.small{font-size:13px;color:#d1fae5}
     .top{padding:18px;max-width:900px;margin:auto;padding-bottom:95px}
     .header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-    .noticePanel{position:sticky;top:8px;z-index:999;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:12px;margin:12px 0}
+    .noticePanel{position:sticky;top:8px;z-index:999;background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:12px;margin:12px 0}
     .noticeHead{font-weight:bold;margin-bottom:8px;color:#fde68a}
     .noticeItem{background:rgba(239,68,68,.22);border:1px solid rgba(248,113,113,.5);padding:10px;border-radius:14px;margin-bottom:8px}
     .noticeTime{font-size:12px;color:#ffedd5;margin-top:4px}
@@ -35,12 +32,10 @@
     .tile span{font-size:26px}
     .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:20px;max-height:560px;overflow:auto}
     .item{background:rgba(255,255,255,.12);padding:12px;border-radius:15px;margin-bottom:10px;text-align:left}
-    .proofImg{width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:10px;border:1px solid rgba(255,255,255,.2)}
-    .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
-    .badge{background:rgba(34,197,94,.25);padding:6px 10px;border-radius:999px;font-size:12px}
+    .proofImg{width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:10px}
     a{color:#86efac;text-decoration:none}
-    .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px}
-    .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px;border-radius:14px}
+    .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px}
+    .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px}
   </style>
 </head>
 
@@ -69,7 +64,6 @@
     </div>
 
     <div id="noticePanel" class="noticePanel hidden"></div>
-
     <button onclick="enableNotifications()">🔔 Allow Notifications + Sound</button>
 
     <div id="statsBox" class="stats hidden">
@@ -84,8 +78,8 @@
       <div class="tile" onclick="showEmergency()"><span>🚨</span><br>Emergency</div>
       <div class="tile" onclick="showProfile()"><span>👤</span><br>Profile</div>
       <div class="tile" onclick="showYojana()"><span>🏛️</span><br>Yojana</div>
-      <div class="tile" onclick="showDirectory()"><span>🏪</span><br>Directory</div>
-      <div id="adminTile" class="tile hidden" onclick="showAdmin()"><span>👑</span><br>Admin</div>
+      <div class="tile" onclick="showDirectory()"><span>📍</span><br>Directory</div>
+      <div id="adminTile" class="tile hidden" onclick="showAdmin()"><span>👑</span><br>Admin Portal</div>
       <div class="tile red" onclick="logout()"><span>🚪</span><br>Logout</div>
     </div>
 
@@ -101,6 +95,8 @@
 </div>
 
 <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwYKdDhvZFz0bEUlEq0r19ID_6ABZBZCqJg3ahZt6418vQtHuxIPv2drPfdN0lh4iSp/exec";
+
 const GOOGLE_FORM_BASE =
 "https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=pp_url&entry.1114604525=";
 
@@ -120,6 +116,15 @@ let currentUser = null;
 let allComplaints = [];
 let allNotices = [];
 let soundAllowed = false;
+
+function apiPost(payload){
+  fetch(API_URL,{
+    method:"POST",
+    mode:"no-cors",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)
+  });
+}
 
 function login(){
   let id = document.getElementById("userid").value.trim();
@@ -173,29 +178,10 @@ function openComplaint(){
 function enableNotifications(){
   soundAllowed = true;
   localStorage.setItem("sound_allowed","yes");
-
   if("Notification" in window){
-    Notification.requestPermission().then(permission => {
-      alert(permission === "granted" ? "Notifications + Sound allowed ✅" : "Sound allowed, notification blocked.");
-    });
-  }else{
-    alert("Sound allowed ✅");
+    Notification.requestPermission();
   }
-  playBeep();
-}
-
-function playBeep(){
-  try{
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    oscillator.connect(gain);
-    gain.connect(audioCtx.destination);
-    oscillator.frequency.value = 880;
-    gain.gain.value = 0.08;
-    oscillator.start();
-    setTimeout(() => { oscillator.stop(); audioCtx.close(); }, 250);
-  }catch(e){}
+  alert("Notification/Sound enabled ✅");
 }
 
 function autoNow(){
@@ -206,66 +192,38 @@ function autoNow(){
 }
 
 function loadNotices(){
-  if(localStorage.getItem("sound_allowed")==="yes") soundAllowed = true;
-
   fetch(NOTICE_SHEET)
     .then(res => res.text())
     .then(data => {
       let json = JSON.parse(data.substr(47).slice(0,-2));
       let rows = json.table.rows;
-
-      allNotices = rows.map((r, index) => ({
-        no:index+1,
+      allNotices = rows.map((r,index)=>({
         title:r.c[0]?.v || "Notice",
         message:r.c[1]?.v || "",
         date:r.c[2]?.f || r.c[2]?.v || autoNow(),
         type:r.c[3]?.v || "Normal"
       })).reverse();
-
       showNoticeList();
-    })
-    .catch(err => console.log("Notice error", err));
+    });
 }
 
 function showNoticeList(){
   const panel = document.getElementById("noticePanel");
-
-  if(allNotices.length === 0){
-    panel.classList.add("hidden");
-    return;
-  }
+  if(allNotices.length === 0){panel.classList.add("hidden");return;}
 
   let html = `<div class="noticeHead">📢 Latest Notices</div>`;
-
-  allNotices.slice(0,4).forEach(n => {
-    html += `
-      <div class="noticeItem">
-        <b>${n.type.toLowerCase()==="urgent" ? "🚨" : "📌"} ${n.title}</b><br>
-        ${n.message}
-        <div class="noticeTime">🕒 ${n.date || autoNow()}</div>
-      </div>
-    `;
+  allNotices.slice(0,4).forEach(n=>{
+    html += `<div class="noticeItem">
+      <b>${n.type.toLowerCase()==="urgent" ? "🚨" : "📌"} ${n.title}</b><br>
+      ${n.message}
+      <div class="noticeTime">🕒 ${n.date}</div>
+    </div>`;
   });
-
   panel.innerHTML = html;
   panel.classList.remove("hidden");
-
-  let latest = allNotices[0];
-  let lastNotice = localStorage.getItem("last_notice_title");
-
-  if(latest && lastNotice !== latest.title){
-    localStorage.setItem("last_notice_title", latest.title);
-    if(soundAllowed) playBeep();
-
-    if("Notification" in window && Notification.permission === "granted"){
-      new Notification("📢 Smart Tiruka Notice", {
-        body: latest.title + " - " + latest.message
-      });
-    }
-  }
 }
 
-setInterval(loadNotices, 60000);
+setInterval(loadNotices,60000);
 
 function getDirectImageLink(link){
   if(!link) return "";
@@ -336,23 +294,30 @@ function renderComplaints(list,title){
       📌 Status: ${c.status}<br>
       ${c.photo ? `<a href="${c.photo}" target="_blank">📷 Open Proof</a>` : ""}
       ${img ? `<img class="proofImg" src="${img}" onerror="this.style.display='none'">` : ""}
+      ${currentUser.role==="Admin" ? `
+        <button class="blue" onclick="updateComplaintStatus('${c.userId}','In Progress')">🔄 Mark In Progress</button>
+        <button onclick="updateComplaintStatus('${c.userId}','Done')">✅ Mark Done</button>
+      ` : ""}
     </div>`;
   });
 
   box.innerHTML=html;
 }
 
+function updateComplaintStatus(userId,status){
+  apiPost({type:"updateComplaint", userId:userId, status:status});
+  alert("Status update request sent ✅ 1 min nantar refresh kara.");
+}
+
 function filterComplaints(){
   let q=document.getElementById("searchBox").value.toLowerCase();
   let status=document.getElementById("statusFilter").value.toLowerCase();
   let sourceList=currentUser.role==="Admin"?allComplaints:allComplaints.filter(c=>c.userId===currentUser.id);
-
   let filtered=sourceList.filter(c=>{
     let text=(c.userId+" "+c.name+" "+c.problem).toLowerCase();
     let statusMatch=status==="all" || c.status.toLowerCase().includes(status);
     return text.includes(q) && statusMatch;
   });
-
   renderComplaints(filtered,currentUser.role==="Admin"?"📋 All Complaints":"📋 My Complaints");
   document.getElementById("searchBox").value=q;
   document.getElementById("statusFilter").value=status;
@@ -367,70 +332,109 @@ function showPage(title, html){
 function showProfile(){
   showPage("👤 My Profile", `
     <div class="pageCard">
-      <div class="row">
-        <div>
-          <h2 style="margin:0">${currentUser.name}</h2>
-          <p class="small">${currentUser.role}</p>
-        </div>
-        <span class="badge">${currentUser.id}</span>
-      </div>
-      <hr>
-      <p>📱 Mobile: ${currentUser.mobile}</p>
-      <p>🏠 Address: ${currentUser.address}</p>
-      <p>🔐 Login Type: Admin Created ID</p>
+      <h2>${currentUser.name}</h2>
+      <p>Role: ${currentUser.role}</p>
+      <p>ID: ${currentUser.id}</p>
+      <p>Mobile: ${currentUser.mobile}</p>
+      <p>Address: ${currentUser.address}</p>
     </div>
   `);
 }
 
 function showEmergency(){
   showPage("🚨 Emergency Contacts", `
-    <div class="pageCard">
-      <h3>Ambulance</h3>
-      <p>Emergency Medical Help</p>
-      <a href="tel:108"><button class="red">📞 Call 108</button></a>
-    </div>
-    <div class="pageCard">
-      <h3>Police</h3>
-      <p>Police emergency contact</p>
-      <a href="tel:100"><button class="blue">📞 Call 100</button></a>
-    </div>
-    <div class="pageCard">
-      <h3>Sarpanch</h3>
-      <p>Gram Panchayat contact</p>
-      <a href="tel:9800000000"><button>📞 Call Sarpanch</button></a>
-    </div>
-    <div class="pageCard">
-      <h3>Doctor</h3>
-      <p>Village doctor contact</p>
-      <a href="tel:9900000000"><button class="orange">📞 Call Doctor</button></a>
-    </div>
+    <div class="pageCard"><h3>Ambulance</h3><a href="tel:108"><button class="red">📞 Call 108</button></a></div>
+    <div class="pageCard"><h3>Police</h3><a href="tel:100"><button class="blue">📞 Call 100</button></a></div>
+    <div class="pageCard"><h3>Sarpanch</h3><a href="tel:9800000000"><button>📞 Call Sarpanch</button></a></div>
+    <div class="pageCard"><h3>Doctor</h3><a href="tel:9900000000"><button class="orange">📞 Call Doctor</button></a></div>
   `);
 }
 
 function showYojana(){
   showPage("🏛️ Sarkari Yojana", `
-    <div class="pageCard"><h3>PM Awas Yojana</h3><p>घरकुल योजनेसाठी documents: Aadhaar, ration card, income proof.</p></div>
-    <div class="pageCard"><h3>Farmer Scheme</h3><p>शेतकरी योजनांची माहिती आणि अर्जासाठी ग्रामपंचायत संपर्क.</p></div>
-    <div class="pageCard"><h3>Scholarship</h3><p>Students साठी scholarship updates आणि documents guide.</p></div>
-    <div class="pageCard"><h3>Ration Card</h3><p>नवीन/दुरुस्ती ration card process information.</p></div>
+    <div class="pageCard"><h3>PM Awas Yojana</h3><p>घरकुल योजनेसाठी documents guide.</p></div>
+    <div class="pageCard"><h3>Farmer Scheme</h3><p>शेतकरी योजनांची माहिती.</p></div>
+    <div class="pageCard"><h3>Scholarship</h3><p>Students scholarship updates.</p></div>
   `);
 }
 
 function showDirectory(){
-  showPage("🏪 Gaav Directory", `
-    <div class="pageCard"><h3>Medical Store</h3><p>Contact: 98xxxxxxx</p><a href="tel:9800000000"><button>Call</button></a></div>
-    <div class="pageCard"><h3>Electrician</h3><p>Contact: 97xxxxxxx</p><a href="tel:9700000000"><button>Call</button></a></div>
-    <div class="pageCard"><h3>Plumber</h3><p>Contact: 96xxxxxxx</p><a href="tel:9600000000"><button>Call</button></a></div>
-    <div class="pageCard"><h3>Tractor Service</h3><p>Contact: 95xxxxxxx</p><a href="tel:9500000000"><button>Call</button></a></div>
+  showPage("📍 Gaav Main Points", `
+    <div class="pageCard"><img class="proofImg" src="https://images.unsplash.com/photo-1604999333679-b86d54738315?q=80&w=900"><h3>🛕 Temple / Mandir</h3><p>Gaavacha mukhya mandir.</p></div>
+    <div class="pageCard"><img class="proofImg" src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=900"><h3>🏫 School</h3><p>Gaavatil school point.</p></div>
+    <div class="pageCard"><img class="proofImg" src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=900"><h3>🏛️ Gram Panchayat Office</h3><p>Main office.</p></div>
+    <div class="pageCard"><img class="proofImg" src="https://images.unsplash.com/photo-1538300342682-cf57afb97285?q=80&w=900"><h3>💧 Water Tank</h3><p>Pani supply point.</p></div>
   `);
 }
 
 function showAdmin(){
-  showPage("👑 Admin Panel", `
-    <div class="pageCard"><h3>Dashboard</h3><p>All complaints + stats active आहेत.</p></div>
-    <div class="pageCard"><h3>Notice System</h3><p>Notice Google Sheet मधून live येते.</p></div>
-    <div class="pageCard"><h3>User Control</h3><p>Signup बंद आहे. User ID admin create करतो.</p></div>
+  showPage("👑 Admin Portal", `
+    <div class="pageCard">
+      <h3>➕ Add User</h3>
+      <input id="newId" placeholder="User ID e.g. GAAV003">
+      <input id="newPass" placeholder="Password">
+      <input id="newName" placeholder="Name">
+      <input id="newMobile" placeholder="Mobile">
+      <input id="newAddress" placeholder="Address">
+      <button onclick="adminAddUser()">Add User</button>
+    </div>
+
+    <div class="pageCard">
+      <h3>📢 Add Notice</h3>
+      <input id="noticeTitle" placeholder="Notice Title">
+      <textarea id="noticeMsg" placeholder="Notice Message"></textarea>
+      <select id="noticeType">
+        <option>Normal</option>
+        <option>Urgent</option>
+        <option>Meeting</option>
+      </select>
+      <button onclick="adminAddNotice()">Add Notice</button>
+    </div>
+
+    <div class="pageCard">
+      <h3>📍 Add Place / Photo</h3>
+      <input id="placeName" placeholder="Place Name">
+      <input id="placeCat" placeholder="Category e.g. Temple">
+      <textarea id="placeDesc" placeholder="Description"></textarea>
+      <input id="placeImage" placeholder="Image Link">
+      <input id="placeMap" placeholder="Map Link">
+      <button onclick="adminAddPlace()">Add Place</button>
+    </div>
   `);
+}
+
+function adminAddUser(){
+  apiPost({
+    type:"addUser",
+    id:document.getElementById("newId").value,
+    password:document.getElementById("newPass").value,
+    name:document.getElementById("newName").value,
+    mobile:document.getElementById("newMobile").value,
+    address:document.getElementById("newAddress").value
+  });
+  alert("User add request sent ✅");
+}
+
+function adminAddNotice(){
+  apiPost({
+    type:"addNotice",
+    title:document.getElementById("noticeTitle").value,
+    message:document.getElementById("noticeMsg").value,
+    type:document.getElementById("noticeType").value
+  });
+  alert("Notice add request sent ✅ 1 min nantar दिसेल.");
+}
+
+function adminAddPlace(){
+  apiPost({
+    type:"addPlace",
+    name:document.getElementById("placeName").value,
+    category:document.getElementById("placeCat").value,
+    description:document.getElementById("placeDesc").value,
+    image:document.getElementById("placeImage").value,
+    map:document.getElementById("placeMap").value
+  });
+  alert("Place add request sent ✅");
 }
 </script>
 

@@ -20,25 +20,10 @@
     .small{font-size:13px;color:#d1fae5}
     .top{padding:18px;max-width:900px;margin:auto;padding-bottom:95px}
     .header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-
-    .noticePanel{
-      position:sticky;top:8px;z-index:999;
-      background:rgba(15,23,42,.92);
-      backdrop-filter:blur(18px);
-      border:1px solid rgba(255,255,255,.18);
-      border-radius:20px;
-      padding:12px;
-      margin:12px 0;
-      box-shadow:0 10px 30px rgba(0,0,0,.35)
-    }
+    .noticePanel{position:sticky;top:8px;z-index:999;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:12px;margin:12px 0}
     .noticeHead{font-weight:bold;margin-bottom:8px;color:#fde68a}
-    .noticeItem{
-      background:rgba(239,68,68,.22);
-      border:1px solid rgba(248,113,113,.5);
-      padding:10px;border-radius:14px;margin-bottom:8px
-    }
+    .noticeItem{background:rgba(239,68,68,.22);border:1px solid rgba(248,113,113,.5);padding:10px;border-radius:14px;margin-bottom:8px}
     .noticeTime{font-size:12px;color:#ffedd5;margin-top:4px}
-
     .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:15px 0}
     .stat{background:rgba(255,255,255,.13);padding:14px;border-radius:18px;text-align:center}
     .stat b{font-size:24px}
@@ -47,6 +32,7 @@
     .tile span{font-size:26px}
     .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:20px;max-height:520px;overflow:auto}
     .item{background:rgba(255,255,255,.12);padding:12px;border-radius:15px;margin-bottom:10px;text-align:left}
+    .proofImg{width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:10px;border:1px solid rgba(255,255,255,.2)}
     a{color:#86efac}
     .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px}
     .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px;border-radius:14px}
@@ -79,7 +65,7 @@
 
     <div id="noticePanel" class="noticePanel hidden"></div>
 
-    <button onclick="enableNotifications()">🔔 Allow Notifications</button>
+    <button onclick="enableNotifications()">🔔 Allow Notifications + Sound</button>
 
     <div id="statsBox" class="stats hidden">
       <div class="stat"><b id="totalCount">0</b><br>Total</div>
@@ -128,6 +114,7 @@ let users = [
 let currentUser = null;
 let allComplaints = [];
 let allNotices = [];
+let soundAllowed = false;
 
 function login(){
   let id = document.getElementById("userid").value.trim();
@@ -179,13 +166,35 @@ function openComplaint(){
 }
 
 function enableNotifications(){
-  if(!("Notification" in window)){
-    alert("Ya browser madhe notification support nahi.");
-    return;
+  soundAllowed = true;
+  localStorage.setItem("sound_allowed","yes");
+
+  if("Notification" in window){
+    Notification.requestPermission().then(permission => {
+      alert(permission === "granted" ? "Notifications + Sound allowed ✅" : "Sound allowed, notification blocked.");
+    });
+  }else{
+    alert("Sound allowed ✅");
   }
-  Notification.requestPermission().then(permission => {
-    alert(permission === "granted" ? "Notifications allowed ✅" : "Notifications allow nahi kele.");
-  });
+
+  playBeep();
+}
+
+function playBeep(){
+  try{
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    oscillator.connect(gain);
+    gain.connect(audioCtx.destination);
+    oscillator.frequency.value = 880;
+    gain.gain.value = 0.08;
+    oscillator.start();
+    setTimeout(() => {
+      oscillator.stop();
+      audioCtx.close();
+    }, 250);
+  }catch(e){}
 }
 
 function autoNow(){
@@ -196,6 +205,8 @@ function autoNow(){
 }
 
 function loadNotices(){
+  if(localStorage.getItem("sound_allowed")==="yes") soundAllowed = true;
+
   fetch(NOTICE_SHEET)
     .then(res => res.text())
     .then(data => {
@@ -243,6 +254,9 @@ function showNoticeList(){
 
   if(latest && lastNotice !== latest.title){
     localStorage.setItem("last_notice_title", latest.title);
+
+    if(soundAllowed) playBeep();
+
     if("Notification" in window && Notification.permission === "granted"){
       new Notification("📢 Smart Tiruka Notice", {
         body: latest.title + " - " + latest.message
@@ -252,6 +266,19 @@ function showNoticeList(){
 }
 
 setInterval(loadNotices, 60000);
+
+function getDirectImageLink(link){
+  if(!link) return "";
+
+  if(link.includes("drive.google.com")){
+    let match = link.match(/[-\w]{25,}/);
+    if(match){
+      return "https://drive.google.com/uc?export=view&id=" + match[0];
+    }
+  }
+
+  return link;
+}
 
 function loadComplaints(showBox=true){
   const box = document.getElementById("contentBox");
@@ -305,12 +332,14 @@ function renderComplaints(list,title){
   if(list.length===0) html+="<p>No complaints found.</p>";
 
   list.forEach(c=>{
+    let img = getDirectImageLink(c.photo);
     html+=`<div class="item">
       <b>#${c.no} - ${c.problem}</b><br>
       👤 User: ${c.name} (${c.userId})<br>
       📅 Date: ${c.date}<br>
       📌 Status: ${c.status}<br>
-      ${c.photo ? `<a href="${c.photo}" target="_blank">📷 View Photo</a>` : ""}
+      ${c.photo ? `<a href="${c.photo}" target="_blank">📷 Open Proof</a>` : ""}
+      ${img ? `<img class="proofImg" src="${img}" onerror="this.style.display='none'">` : ""}
     </div>`;
   });
 
@@ -350,7 +379,7 @@ function showDirectory(){
 }
 
 function showAdmin(){
-  alert("👑 Admin Panel:\nAll complaints + stats active.\nNotice top panel madhe one-by-one diste.");
+  alert("👑 Admin Panel:\nAll complaints + stats active.\nProof image preview + notice sound active.");
 }
 </script>
 

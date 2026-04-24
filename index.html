@@ -9,7 +9,7 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial;background:linear-gradient(135deg,#0f172a,#064e3b);color:white;min-height:100vh}
     .center{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-    .card{width:100%;max-width:430px;background:rgba(255,255,255,.12);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:26px;padding:25px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+    .card{width:100%;max-width:430px;background:rgba(255,255,255,.12);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:26px;padding:25px}
     .logo{width:70px;height:70px;border-radius:22px;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;margin-bottom:15px}
     input,select,button{width:100%;padding:14px;margin:8px 0;border-radius:15px;border:0;font-size:15px}
     input,select{background:white;color:#111}
@@ -20,7 +20,17 @@
     .top{padding:18px;max-width:900px;margin:auto;padding-bottom:95px}
     .header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
     .miniLogo{width:48px;height:48px;border-radius:16px;background:#22c55e;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px}
-    .banner{padding:14px;border-radius:18px;margin:12px 0;background:rgba(239,68,68,.25);border:1px solid rgba(248,113,113,.5)}
+
+    .banner{
+      position:sticky;top:10px;z-index:999;
+      padding:14px;border-radius:18px;margin:12px 0;
+      background:linear-gradient(90deg,#ef4444,#f97316);
+      border:1px solid rgba(248,113,113,.6);
+      font-weight:bold;box-shadow:0 10px 30px rgba(0,0,0,.35);
+      animation:blink 1.5s infinite;
+    }
+    @keyframes blink{0%{opacity:1}50%{opacity:.68}100%{opacity:1}}
+
     .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:15px 0}
     .stat{background:rgba(255,255,255,.13);padding:14px;border-radius:18px;text-align:center;border:1px solid rgba(255,255,255,.14)}
     .stat b{font-size:24px}
@@ -29,9 +39,6 @@
     .tile span{font-size:26px}
     .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:20px;max-height:520px;overflow:auto}
     .item{background:rgba(255,255,255,.12);padding:12px;border-radius:15px;margin-bottom:10px;text-align:left;border:1px solid rgba(255,255,255,.15)}
-    .urgent{border-color:#f87171;background:rgba(239,68,68,.22)}
-    .meeting{border-color:#60a5fa;background:rgba(59,130,246,.20)}
-    .normal{border-color:#86efac;background:rgba(34,197,94,.14)}
     a{color:#86efac}
     .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px;border-top:1px solid rgba(255,255,255,.15)}
     .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px;border-radius:14px}
@@ -54,7 +61,6 @@
 
 <div id="appPage" class="hidden">
   <div class="top">
-
     <div class="header">
       <div class="miniLogo">ST</div>
       <div>
@@ -64,6 +70,7 @@
     </div>
 
     <div id="noticeBanner" class="banner hidden"></div>
+
     <button onclick="enableNotifications()">🔔 Allow Notifications</button>
 
     <div id="statsBox" class="stats hidden">
@@ -75,7 +82,6 @@
     <div class="grid">
       <div class="tile" onclick="openComplaint()"><span>📸</span><br>Complaint Tak</div>
       <div class="tile" onclick="showComplaints()"><span>📋</span><br>Complaints</div>
-      <div class="tile" onclick="showNotices()"><span>📢</span><br>Notice</div>
       <div class="tile" onclick="showEmergency()"><span>🚨</span><br>Emergency</div>
       <div class="tile" onclick="showProfile()"><span>👤</span><br>Profile</div>
       <div class="tile" onclick="showYojana()"><span>🏛️</span><br>Yojana</div>
@@ -85,13 +91,12 @@
     </div>
 
     <div id="contentBox" class="list hidden"></div>
-
   </div>
 
   <div class="bottomNav">
     <div class="navBtn" onclick="goHome()">🏠<br>Home</div>
     <div class="navBtn" onclick="openComplaint()">📸<br>Complaint</div>
-    <div class="navBtn" onclick="showNotices()">📢<br>Notice</div>
+    <div class="navBtn" onclick="showComplaints()">📋<br>List</div>
     <div class="navBtn" onclick="showProfile()">👤<br>Profile</div>
   </div>
 </div>
@@ -142,7 +147,7 @@ function openApp(){
     loadComplaints(false);
   }
 
-  loadNotices(false);
+  loadNotices();
 }
 
 window.onload = function(){
@@ -172,21 +177,12 @@ function enableNotifications(){
     return;
   }
   Notification.requestPermission().then(permission => {
-    if(permission === "granted"){
-      alert("Notifications allowed ✅");
-    }else{
-      alert("Notifications allow nahi kele.");
-    }
+    if(permission === "granted") alert("Notifications allowed ✅");
+    else alert("Notifications allow nahi kele.");
   });
 }
 
-function loadNotices(showBox=true){
-  const box = document.getElementById("contentBox");
-  if(showBox){
-    box.classList.remove("hidden");
-    box.innerHTML = "Loading notices...";
-  }
-
+function loadNotices(){
   fetch(NOTICE_SHEET)
     .then(res => res.text())
     .then(data => {
@@ -201,67 +197,44 @@ function loadNotices(showBox=true){
         type:r.c[3]?.v || "Normal"
       })).reverse();
 
-      showTopUrgentNotice();
-
-      if(showBox) renderNotices();
+      showFloatingNotice();
     })
     .catch(err => {
-      if(showBox) box.innerHTML = "Error: NOTICES sheet name/check public access.";
+      console.log("Notice error", err);
     });
 }
 
-function showTopUrgentNotice(){
-  let urgent = allNotices.find(n => n.type.toLowerCase() === "urgent");
+function showFloatingNotice(){
   const banner = document.getElementById("noticeBanner");
 
-  if(urgent){
-    banner.classList.remove("hidden");
-    banner.innerHTML = `<b>🚨 ${urgent.title}</b><br>${urgent.message}<br><span class="small">${urgent.date}</span>`;
-
-    let lastNotice = localStorage.getItem("last_notice_title");
-    if(lastNotice !== urgent.title){
-      localStorage.setItem("last_notice_title", urgent.title);
-
-      if("Notification" in window && Notification.permission === "granted"){
-        new Notification("🚨 Smart Tiruka Notice", {
-          body: urgent.title + " - " + urgent.message
-        });
-      }
-    }
-  }else{
-    banner.classList.add("hidden");
-  }
-}
-
-function showNotices(){
-  loadNotices(true);
-}
-
-function renderNotices(){
-  const box = document.getElementById("contentBox");
-
-  let html = `<h3>📢 Live Notice Board</h3>`;
-
   if(allNotices.length === 0){
-    html += "<p>No notices found.</p>";
+    banner.classList.add("hidden");
+    return;
   }
 
-  allNotices.forEach(n => {
-    let cls = n.type.toLowerCase() === "urgent" ? "urgent" :
-              n.type.toLowerCase() === "meeting" ? "meeting" : "normal";
+  let noticeText = allNotices.map(n => {
+    let icon = n.type.toLowerCase() === "urgent" ? "🚨" : "📢";
+    return `${icon} ${n.title} - ${n.message} (${n.date})`;
+  }).join("   •   ");
 
-    html += `
-      <div class="item ${cls}">
-        <b>${n.type === "Urgent" ? "🚨" : "📢"} ${n.title}</b><br>
-        ${n.message}<br>
-        📅 ${n.date}<br>
-        🏷️ ${n.type}
-      </div>
-    `;
-  });
+  banner.classList.remove("hidden");
+  banner.innerHTML = `<marquee behavior="scroll" direction="left" scrollamount="5">${noticeText}</marquee>`;
 
-  box.innerHTML = html;
+  let latest = allNotices[0];
+  let lastNotice = localStorage.getItem("last_notice_title");
+
+  if(lastNotice !== latest.title){
+    localStorage.setItem("last_notice_title", latest.title);
+
+    if("Notification" in window && Notification.permission === "granted"){
+      new Notification("📢 Smart Tiruka Notice", {
+        body: latest.title + " - " + latest.message
+      });
+    }
+  }
 }
+
+setInterval(loadNotices, 60000);
 
 function loadComplaints(showBox=true){
   const box = document.getElementById("contentBox");
@@ -326,9 +299,7 @@ function renderComplaints(list, title){
     </select>
   `;
 
-  if(list.length === 0){
-    html += "<p>No complaints found.</p>";
-  }
+  if(list.length === 0) html += "<p>No complaints found.</p>";
 
   list.forEach(c => {
     html += `
@@ -381,7 +352,7 @@ function showDirectory(){
 }
 
 function showAdmin(){
-  alert("👑 Admin Panel:\nAdmin la all complaints + stats distat.\nNotice NOTICES sheet madhun live yete.");
+  alert("👑 Admin Panel:\nAll complaints + stats active.\nNotice top floating banner madhe live yete.");
 }
 </script>
 

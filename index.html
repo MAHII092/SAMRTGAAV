@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Smart Gaav App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
+input,button { padding:10px; margin:10px; border-radius:10px; }
+button { background:#22c55e; color:white; border:none; }
+.box { margin-top:50px; }
+</style>
+</head>
+
+<body>
+
+<div id="login" class="box">
+<h2>Login</h2>
+<input id="userid" placeholder="User ID"><br>
+<input id="pass" type="password" placeholder="Password"><br>
+<button onclick="login()">Login</button>
+</div>
+
+<div id="app" style="display:none">
+<h2>Smart Gaav Dashboard</h2>
+
+<button onclick="openForm()">📸 Complaint Tak</button>
+<button onclick="notice()">📢 Notice</button>
+<button onclick="profile()">👤 Profile</button>
+
+</div>
+
+<script>
+let users = [
+{ id:"GAAV001", pass:"1234", name:"Mahesh"},
+{ id:"GAAV002", pass:"1234", name:"Ramesh"}
+];
+
+function login(){
+let id = document.getElementById("userid").value;
+let pass = document.getElementById("pass").value;
+
+let user = users.find(u => u.id==id && u.pass==pass);
+
+if(user){
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="block";
+alert("Welcome " + user.name);
+}else{
+alert("Wrong ID or Password");
+}
+}
+
+function openForm(){
+window.open("PASTE_GOOGLE_FORM_LINK");
+}
+
+function notice(){
+alert("Aaj pani 2pm la band rahel");
+}
+
+function profile(){
+alert("User Profile");
+}
+</script>
+
+</body>
+</html>

@@ -76,7 +76,7 @@
 <script>
 const GOOGLE_FORM_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=header";
 
-const GOOGLE_SHEET_JSON_LINK = "https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/gviz/tq?tqx=out:json";
+const GOOGLE_SHEET_JSON_LINK = https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/gviz/tq?tqx=out:json";
 
 let users = [
   { id:"ADMIN", pass:"1234", name:"Mahesh Admin", mobile:"98xxxxxxx", address:"Gaav", role:"Admin" },
@@ -126,7 +126,7 @@ function logout(){
 }
 
 function openComplaint(){
-  if(GOOGLE_FORM_LINK.includes("PASTE_")){
+  if(GOOGLE_FORM_LINK.includes("https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=dialog")){
     alert("Google Form link code madhe paste kara.");
     return;
   }
@@ -139,7 +139,7 @@ function showComplaints(){
     return;
   }
 
-  if(GOOGLE_SHEET_JSON_LINK.includes("PASTE_")){
+  if(GOOGLE_SHEET_JSON_LINK.includes("https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/gviz/tq?tqx=out:json")){
     alert("Google Sheet JSON link code madhe paste kara.");
     return;
   }

@@ -20,6 +20,7 @@
     .top{padding:18px;max-width:900px;margin:auto;padding-bottom:95px}
     .header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
     .miniLogo{width:48px;height:48px;border-radius:16px;background:#22c55e;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px}
+    .banner{padding:14px;border-radius:18px;margin:12px 0;background:rgba(239,68,68,.25);border:1px solid rgba(248,113,113,.5)}
     .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:15px 0}
     .stat{background:rgba(255,255,255,.13);padding:14px;border-radius:18px;text-align:center;border:1px solid rgba(255,255,255,.14)}
     .stat b{font-size:24px}
@@ -28,6 +29,9 @@
     .tile span{font-size:26px}
     .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:20px;max-height:520px;overflow:auto}
     .item{background:rgba(255,255,255,.12);padding:12px;border-radius:15px;margin-bottom:10px;text-align:left;border:1px solid rgba(255,255,255,.15)}
+    .urgent{border-color:#f87171;background:rgba(239,68,68,.22)}
+    .meeting{border-color:#60a5fa;background:rgba(59,130,246,.20)}
+    .normal{border-color:#86efac;background:rgba(34,197,94,.14)}
     a{color:#86efac}
     .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px;border-top:1px solid rgba(255,255,255,.15)}
     .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px;border-radius:14px}
@@ -41,10 +45,8 @@
     <div class="logo">ST</div>
     <h1>Smart Tiruka</h1>
     <p class="small">Digital Gram Panchayat App</p>
-
     <input id="userid" placeholder="User ID">
     <input id="password" type="password" placeholder="Password">
-
     <button onclick="login()">Login</button>
     <p class="small">Signup nahi. User ID admin kadun milel.</p>
   </div>
@@ -61,6 +63,9 @@
       </div>
     </div>
 
+    <div id="noticeBanner" class="banner hidden"></div>
+    <button onclick="enableNotifications()">🔔 Allow Notifications</button>
+
     <div id="statsBox" class="stats hidden">
       <div class="stat"><b id="totalCount">0</b><br>Total</div>
       <div class="stat"><b id="pendingCount">0</b><br>Pending</div>
@@ -69,8 +74,8 @@
 
     <div class="grid">
       <div class="tile" onclick="openComplaint()"><span>📸</span><br>Complaint Tak</div>
-      <div class="tile" onclick="showComplaints()"><span>📋</span><br id="complaintText">Complaints</div>
-      <div class="tile" onclick="showNotice()"><span>📢</span><br>Notice</div>
+      <div class="tile" onclick="showComplaints()"><span>📋</span><br>Complaints</div>
+      <div class="tile" onclick="showNotices()"><span>📢</span><br>Notice</div>
       <div class="tile" onclick="showEmergency()"><span>🚨</span><br>Emergency</div>
       <div class="tile" onclick="showProfile()"><span>👤</span><br>Profile</div>
       <div class="tile" onclick="showYojana()"><span>🏛️</span><br>Yojana</div>
@@ -79,14 +84,14 @@
       <div class="tile logout" onclick="logout()"><span>🚪</span><br>Logout</div>
     </div>
 
-    <div id="complaintBox" class="list hidden"></div>
+    <div id="contentBox" class="list hidden"></div>
 
   </div>
 
   <div class="bottomNav">
     <div class="navBtn" onclick="goHome()">🏠<br>Home</div>
     <div class="navBtn" onclick="openComplaint()">📸<br>Complaint</div>
-    <div class="navBtn" onclick="showComplaints()">📋<br>List</div>
+    <div class="navBtn" onclick="showNotices()">📢<br>Notice</div>
     <div class="navBtn" onclick="showProfile()">👤<br>Profile</div>
   </div>
 </div>
@@ -95,8 +100,11 @@
 const GOOGLE_FORM_BASE =
 "https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=pp_url&entry.1114604525=";
 
-const GOOGLE_SHEET_JSON_LINK =
+const COMPLAINT_SHEET =
 "https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/gviz/tq?tqx=out:json";
+
+const NOTICE_SHEET =
+"https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/gviz/tq?sheet=NOTICES&tqx=out:json";
 
 let users = [
   { id:"ADMIN", pass:"1234", name:"Mahesh Admin", mobile:"98xxxxxxx", address:"Tiruka", role:"Admin" },
@@ -106,11 +114,11 @@ let users = [
 
 let currentUser = null;
 let allComplaints = [];
+let allNotices = [];
 
 function login(){
   let id = document.getElementById("userid").value.trim();
   let pass = document.getElementById("password").value.trim();
-
   let user = users.find(u => u.id === id && u.pass === pass);
 
   if(user){
@@ -125,7 +133,6 @@ function login(){
 function openApp(){
   document.getElementById("loginPage").classList.add("hidden");
   document.getElementById("appPage").classList.remove("hidden");
-
   document.getElementById("welcome").innerText = "Namaskar, " + currentUser.name;
   document.getElementById("roleText").innerText = "Role: " + currentUser.role + " | ID: " + currentUser.id;
 
@@ -133,9 +140,9 @@ function openApp(){
     document.getElementById("adminTile").classList.remove("hidden");
     document.getElementById("statsBox").classList.remove("hidden");
     loadComplaints(false);
-  }else{
-    document.getElementById("statsBox").classList.add("hidden");
   }
+
+  loadNotices(false);
 }
 
 window.onload = function(){
@@ -152,23 +159,119 @@ function logout(){
 }
 
 function goHome(){
-  document.getElementById("complaintBox").classList.add("hidden");
+  document.getElementById("contentBox").classList.add("hidden");
 }
 
 function openComplaint(){
-  let finalLink = GOOGLE_FORM_BASE + encodeURIComponent(currentUser.id);
-  window.open(finalLink, "_blank");
+  window.open(GOOGLE_FORM_BASE + encodeURIComponent(currentUser.id), "_blank");
+}
+
+function enableNotifications(){
+  if(!("Notification" in window)){
+    alert("Ya browser madhe notification support nahi.");
+    return;
+  }
+  Notification.requestPermission().then(permission => {
+    if(permission === "granted"){
+      alert("Notifications allowed ✅");
+    }else{
+      alert("Notifications allow nahi kele.");
+    }
+  });
+}
+
+function loadNotices(showBox=true){
+  const box = document.getElementById("contentBox");
+  if(showBox){
+    box.classList.remove("hidden");
+    box.innerHTML = "Loading notices...";
+  }
+
+  fetch(NOTICE_SHEET)
+    .then(res => res.text())
+    .then(data => {
+      let json = JSON.parse(data.substr(47).slice(0,-2));
+      let rows = json.table.rows;
+
+      allNotices = rows.map((r, index) => ({
+        no:index+1,
+        title:r.c[0]?.v || "Notice",
+        message:r.c[1]?.v || "",
+        date:r.c[2]?.f || r.c[2]?.v || "",
+        type:r.c[3]?.v || "Normal"
+      })).reverse();
+
+      showTopUrgentNotice();
+
+      if(showBox) renderNotices();
+    })
+    .catch(err => {
+      if(showBox) box.innerHTML = "Error: NOTICES sheet name/check public access.";
+    });
+}
+
+function showTopUrgentNotice(){
+  let urgent = allNotices.find(n => n.type.toLowerCase() === "urgent");
+  const banner = document.getElementById("noticeBanner");
+
+  if(urgent){
+    banner.classList.remove("hidden");
+    banner.innerHTML = `<b>🚨 ${urgent.title}</b><br>${urgent.message}<br><span class="small">${urgent.date}</span>`;
+
+    let lastNotice = localStorage.getItem("last_notice_title");
+    if(lastNotice !== urgent.title){
+      localStorage.setItem("last_notice_title", urgent.title);
+
+      if("Notification" in window && Notification.permission === "granted"){
+        new Notification("🚨 Smart Tiruka Notice", {
+          body: urgent.title + " - " + urgent.message
+        });
+      }
+    }
+  }else{
+    banner.classList.add("hidden");
+  }
+}
+
+function showNotices(){
+  loadNotices(true);
+}
+
+function renderNotices(){
+  const box = document.getElementById("contentBox");
+
+  let html = `<h3>📢 Live Notice Board</h3>`;
+
+  if(allNotices.length === 0){
+    html += "<p>No notices found.</p>";
+  }
+
+  allNotices.forEach(n => {
+    let cls = n.type.toLowerCase() === "urgent" ? "urgent" :
+              n.type.toLowerCase() === "meeting" ? "meeting" : "normal";
+
+    html += `
+      <div class="item ${cls}">
+        <b>${n.type === "Urgent" ? "🚨" : "📢"} ${n.title}</b><br>
+        ${n.message}<br>
+        📅 ${n.date}<br>
+        🏷️ ${n.type}
+      </div>
+    `;
+  });
+
+  box.innerHTML = html;
 }
 
 function loadComplaints(showBox=true){
-  const box = document.getElementById("complaintBox");
+  const box = document.getElementById("contentBox");
 
   if(showBox){
     box.classList.remove("hidden");
     box.innerHTML = "Loading complaints...";
   }
 
-  fetch(GOOGLE_SHEET_JSON_LINK)
+  fetch(COMPLAINT_SHEET)
     .then(res => res.text())
     .then(data => {
       let json = JSON.parse(data.substr(47).slice(0,-2));
@@ -190,24 +293,19 @@ function loadComplaints(showBox=true){
         if(currentUser.role === "Admin"){
           renderComplaints(allComplaints, "📋 All Complaints");
         }else{
-          let myComplaints = allComplaints.filter(c => c.userId === currentUser.id);
-          renderComplaints(myComplaints, "📋 My Complaints");
+          renderComplaints(allComplaints.filter(c => c.userId === currentUser.id), "📋 My Complaints");
         }
       }
     })
     .catch(err => {
-      box.innerHTML = "Error: Sheet public nahi kiwa link wrong ahe.";
+      box.innerHTML = "Error: Complaint sheet public nahi kiwa link wrong ahe.";
     });
 }
 
 function updateStats(){
-  let total = allComplaints.length;
-  let pending = allComplaints.filter(c => c.status.toLowerCase().includes("pending")).length;
-  let done = allComplaints.filter(c => c.status.toLowerCase().includes("done")).length;
-
-  document.getElementById("totalCount").innerText = total;
-  document.getElementById("pendingCount").innerText = pending;
-  document.getElementById("doneCount").innerText = done;
+  document.getElementById("totalCount").innerText = allComplaints.length;
+  document.getElementById("pendingCount").innerText = allComplaints.filter(c => c.status.toLowerCase().includes("pending")).length;
+  document.getElementById("doneCount").innerText = allComplaints.filter(c => c.status.toLowerCase().includes("done")).length;
 }
 
 function showComplaints(){
@@ -215,7 +313,7 @@ function showComplaints(){
 }
 
 function renderComplaints(list, title){
-  const box = document.getElementById("complaintBox");
+  const box = document.getElementById("contentBox");
 
   let html = `
     <h3>${title}</h3>
@@ -262,13 +360,8 @@ function filterComplaints(){
   });
 
   renderComplaints(filtered, currentUser.role === "Admin" ? "📋 All Complaints" : "📋 My Complaints");
-
   document.getElementById("searchBox").value = q;
   document.getElementById("statusFilter").value = status;
-}
-
-function showNotice(){
-  alert("📢 Notice:\nAaj Gram Sabha sandhyakali 5 vajta ahe.\nPani supply udya sakali 7 te 9.");
 }
 
 function showEmergency(){
@@ -288,7 +381,7 @@ function showDirectory(){
 }
 
 function showAdmin(){
-  alert("👑 Admin Panel:\nAdmin la all complaints + stats distat.\nUser la fakt tyachya complaints distat.");
+  alert("👑 Admin Panel:\nAdmin la all complaints + stats distat.\nNotice NOTICES sheet madhun live yete.");
 }
 </script>
 

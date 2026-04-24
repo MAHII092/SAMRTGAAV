@@ -4,6 +4,7 @@
   <title>Smart Tiruka</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#064e3b">
+
   <style>
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial;background:linear-gradient(135deg,#0f172a,#064e3b);color:white;min-height:100vh}
@@ -30,7 +31,6 @@
     a{color:#86efac}
     .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px;border-top:1px solid rgba(255,255,255,.15)}
     .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px;border-radius:14px}
-    .navBtn:active{background:rgba(255,255,255,.12)}
   </style>
 </head>
 
@@ -41,8 +41,10 @@
     <div class="logo">ST</div>
     <h1>Smart Tiruka</h1>
     <p class="small">Digital Gram Panchayat App</p>
+
     <input id="userid" placeholder="User ID">
     <input id="password" type="password" placeholder="Password">
+
     <button onclick="login()">Login</button>
     <p class="small">Signup nahi. User ID admin kadun milel.</p>
   </div>
@@ -50,6 +52,7 @@
 
 <div id="appPage" class="hidden">
   <div class="top">
+
     <div class="header">
       <div class="miniLogo">ST</div>
       <div>
@@ -64,9 +67,9 @@
       <div class="stat"><b id="doneCount">0</b><br>Done</div>
     </div>
 
-    <div class="grid" id="homeGrid">
+    <div class="grid">
       <div class="tile" onclick="openComplaint()"><span>📸</span><br>Complaint Tak</div>
-      <div class="tile" onclick="showComplaints()"><span>📋</span><br>Complaints</div>
+      <div class="tile" onclick="showComplaints()"><span>📋</span><br id="complaintText">Complaints</div>
       <div class="tile" onclick="showNotice()"><span>📢</span><br>Notice</div>
       <div class="tile" onclick="showEmergency()"><span>🚨</span><br>Emergency</div>
       <div class="tile" onclick="showProfile()"><span>👤</span><br>Profile</div>
@@ -77,19 +80,23 @@
     </div>
 
     <div id="complaintBox" class="list hidden"></div>
+
   </div>
 
   <div class="bottomNav">
     <div class="navBtn" onclick="goHome()">🏠<br>Home</div>
     <div class="navBtn" onclick="openComplaint()">📸<br>Complaint</div>
-    <div class="navBtn" onclick="showNotice()">📢<br>Notice</div>
+    <div class="navBtn" onclick="showComplaints()">📋<br>List</div>
     <div class="navBtn" onclick="showProfile()">👤<br>Profile</div>
   </div>
 </div>
 
 <script>
-const GOOGLE_FORM_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=dialog";
-const GOOGLE_SHEET_JSON_LINK = "https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/gviz/tq?tqx=out:json";
+const GOOGLE_FORM_BASE =
+"https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=pp_url&entry.1114604525=";
+
+const GOOGLE_SHEET_JSON_LINK =
+"https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/gviz/tq?tqx=out:json";
 
 let users = [
   { id:"ADMIN", pass:"1234", name:"Mahesh Admin", mobile:"98xxxxxxx", address:"Tiruka", role:"Admin" },
@@ -103,13 +110,14 @@ let allComplaints = [];
 function login(){
   let id = document.getElementById("userid").value.trim();
   let pass = document.getElementById("password").value.trim();
+
   let user = users.find(u => u.id === id && u.pass === pass);
 
   if(user){
     currentUser = user;
     localStorage.setItem("smarttiruka_user", JSON.stringify(user));
     openApp();
-  } else {
+  }else{
     alert("Wrong ID or Password");
   }
 }
@@ -117,6 +125,7 @@ function login(){
 function openApp(){
   document.getElementById("loginPage").classList.add("hidden");
   document.getElementById("appPage").classList.remove("hidden");
+
   document.getElementById("welcome").innerText = "Namaskar, " + currentUser.name;
   document.getElementById("roleText").innerText = "Role: " + currentUser.role + " | ID: " + currentUser.id;
 
@@ -124,6 +133,8 @@ function openApp(){
     document.getElementById("adminTile").classList.remove("hidden");
     document.getElementById("statsBox").classList.remove("hidden");
     loadComplaints(false);
+  }else{
+    document.getElementById("statsBox").classList.add("hidden");
   }
 }
 
@@ -143,14 +154,15 @@ function logout(){
 function goHome(){
   document.getElementById("complaintBox").classList.add("hidden");
 }
-  
+
 function openComplaint(){
-  let formLink = "https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4onOJo8IaVuLrRzLgcan3rcF5oJmuwYlesjpg/viewform?usp=pp_url&entry.1114604525=" + encodeURIComponent(currentUser.id);
-  window.open(formLink, "_blank");
+  let finalLink = GOOGLE_FORM_BASE + encodeURIComponent(currentUser.id);
+  window.open(finalLink, "_blank");
 }
 
 function loadComplaints(showBox=true){
   const box = document.getElementById("complaintBox");
+
   if(showBox){
     box.classList.remove("hidden");
     box.innerHTML = "Loading complaints...";
@@ -173,10 +185,18 @@ function loadComplaints(showBox=true){
       }));
 
       updateStats();
-      if(showBox) renderComplaints(allComplaints);
+
+      if(showBox){
+        if(currentUser.role === "Admin"){
+          renderComplaints(allComplaints, "📋 All Complaints");
+        }else{
+          let myComplaints = allComplaints.filter(c => c.userId === currentUser.id);
+          renderComplaints(myComplaints, "📋 My Complaints");
+        }
+      }
     })
     .catch(err => {
-      if(showBox) box.innerHTML = "Error: Sheet public nahi kiwa link wrong ahe.";
+      box.innerHTML = "Error: Sheet public nahi kiwa link wrong ahe.";
     });
 }
 
@@ -191,18 +211,14 @@ function updateStats(){
 }
 
 function showComplaints(){
-  if(currentUser.role !== "Admin"){
-    alert("Fakt Admin complaints list pahu shakto.");
-    return;
-  }
   loadComplaints(true);
 }
 
-function renderComplaints(list){
+function renderComplaints(list, title){
   const box = document.getElementById("complaintBox");
 
   let html = `
-    <h3>📋 Complaints List</h3>
+    <h3>${title}</h3>
     <input id="searchBox" placeholder="Search by name, problem, user id" oninput="filterComplaints()">
     <select id="statusFilter" onchange="filterComplaints()">
       <option value="all">All Status</option>
@@ -235,13 +251,18 @@ function filterComplaints(){
   let q = document.getElementById("searchBox").value.toLowerCase();
   let status = document.getElementById("statusFilter").value.toLowerCase();
 
-  let filtered = allComplaints.filter(c => {
+  let sourceList = currentUser.role === "Admin"
+    ? allComplaints
+    : allComplaints.filter(c => c.userId === currentUser.id);
+
+  let filtered = sourceList.filter(c => {
     let text = (c.userId + " " + c.name + " " + c.problem).toLowerCase();
     let statusMatch = status === "all" || c.status.toLowerCase().includes(status);
     return text.includes(q) && statusMatch;
   });
 
-  renderComplaints(filtered);
+  renderComplaints(filtered, currentUser.role === "Admin" ? "📋 All Complaints" : "📋 My Complaints");
+
   document.getElementById("searchBox").value = q;
   document.getElementById("statusFilter").value = status;
 }
@@ -267,7 +288,7 @@ function showDirectory(){
 }
 
 function showAdmin(){
-  alert("👑 Admin Panel:\nDashboard active ahe.\nComplaints list + search/filter available ahe.");
+  alert("👑 Admin Panel:\nAdmin la all complaints + stats distat.\nUser la fakt tyachya complaints distat.");
 }
 </script>
 

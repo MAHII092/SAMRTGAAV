@@ -1,28 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Smart Gaav</title>
+  <title>Smart Tiruka</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#064e3b">
   <style>
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial;background:linear-gradient(135deg,#0f172a,#064e3b);color:white;min-height:100vh}
     .center{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-    .card{width:100%;max-width:430px;background:rgba(255,255,255,.12);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:25px;padding:25px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-    input,select,button{width:100%;padding:14px;margin:8px 0;border-radius:14px;border:0;font-size:15px}
+    .card{width:100%;max-width:430px;background:rgba(255,255,255,.12);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:26px;padding:25px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+    .logo{width:70px;height:70px;border-radius:22px;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;margin-bottom:15px}
+    input,select,button{width:100%;padding:14px;margin:8px 0;border-radius:15px;border:0;font-size:15px}
     input,select{background:white;color:#111}
     button{background:#22c55e;color:white;font-weight:bold;cursor:pointer}
     .logout{background:#ef4444}
-    .top{padding:18px;max-width:900px;margin:auto}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
-    .tile{background:rgba(255,255,255,.15);padding:18px;border-radius:18px;text-align:center;border:1px solid rgba(255,255,255,.18);cursor:pointer}
     .hidden{display:none}
     .small{font-size:13px;color:#d1fae5}
-    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:15px}
-    .stat{background:rgba(255,255,255,.13);padding:14px;border-radius:16px;text-align:center}
+    .top{padding:18px;max-width:900px;margin:auto;padding-bottom:95px}
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+    .miniLogo{width:48px;height:48px;border-radius:16px;background:#22c55e;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px}
+    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:15px 0}
+    .stat{background:rgba(255,255,255,.13);padding:14px;border-radius:18px;text-align:center;border:1px solid rgba(255,255,255,.14)}
     .stat b{font-size:24px}
-    .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:18px;max-height:500px;overflow:auto}
-    .item{background:rgba(255,255,255,.12);padding:12px;border-radius:14px;margin-bottom:10px;text-align:left;border:1px solid rgba(255,255,255,.15)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
+    .tile{background:rgba(255,255,255,.15);padding:18px;border-radius:20px;text-align:center;border:1px solid rgba(255,255,255,.18);cursor:pointer;min-height:88px}
+    .tile span{font-size:26px}
+    .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:20px;max-height:520px;overflow:auto}
+    .item{background:rgba(255,255,255,.12);padding:12px;border-radius:15px;margin-bottom:10px;text-align:left;border:1px solid rgba(255,255,255,.15)}
     a{color:#86efac}
+    .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px;border-top:1px solid rgba(255,255,255,.15)}
+    .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px;border-radius:14px}
+    .navBtn:active{background:rgba(255,255,255,.12)}
   </style>
 </head>
 
@@ -30,7 +38,8 @@
 
 <div id="loginPage" class="center">
   <div class="card">
-    <h1>🌿 Smart Gaav</h1>
+    <div class="logo">ST</div>
+    <h1>Smart Tiruka</h1>
     <p class="small">Digital Gram Panchayat App</p>
     <input id="userid" placeholder="User ID">
     <input id="password" type="password" placeholder="Password">
@@ -41,8 +50,13 @@
 
 <div id="appPage" class="hidden">
   <div class="top">
-    <h2 id="welcome">Welcome</h2>
-    <p id="roleText" class="small"></p>
+    <div class="header">
+      <div class="miniLogo">ST</div>
+      <div>
+        <h2 id="welcome" style="margin:0">Welcome</h2>
+        <p id="roleText" class="small" style="margin:4px 0"></p>
+      </div>
+    </div>
 
     <div id="statsBox" class="stats hidden">
       <div class="stat"><b id="totalCount">0</b><br>Total</div>
@@ -50,19 +64,26 @@
       <div class="stat"><b id="doneCount">0</b><br>Done</div>
     </div>
 
-    <div class="grid">
-      <div class="tile" onclick="openComplaint()">📸<br>Complaint Tak</div>
-      <div class="tile" onclick="showComplaints()">📋<br>Complaints</div>
-      <div class="tile" onclick="showNotice()">📢<br>Notice</div>
-      <div class="tile" onclick="showEmergency()">🚨<br>Emergency</div>
-      <div class="tile" onclick="showProfile()">👤<br>Profile</div>
-      <div class="tile" onclick="showYojana()">🏛️<br>Yojana</div>
-      <div class="tile" onclick="showDirectory()">🏪<br>Directory</div>
-      <div id="adminTile" class="tile hidden" onclick="showAdmin()">👑<br>Admin</div>
-      <div class="tile logout" onclick="logout()">🚪<br>Logout</div>
+    <div class="grid" id="homeGrid">
+      <div class="tile" onclick="openComplaint()"><span>📸</span><br>Complaint Tak</div>
+      <div class="tile" onclick="showComplaints()"><span>📋</span><br>Complaints</div>
+      <div class="tile" onclick="showNotice()"><span>📢</span><br>Notice</div>
+      <div class="tile" onclick="showEmergency()"><span>🚨</span><br>Emergency</div>
+      <div class="tile" onclick="showProfile()"><span>👤</span><br>Profile</div>
+      <div class="tile" onclick="showYojana()"><span>🏛️</span><br>Yojana</div>
+      <div class="tile" onclick="showDirectory()"><span>🏪</span><br>Directory</div>
+      <div id="adminTile" class="tile hidden" onclick="showAdmin()"><span>👑</span><br>Admin</div>
+      <div class="tile logout" onclick="logout()"><span>🚪</span><br>Logout</div>
     </div>
 
     <div id="complaintBox" class="list hidden"></div>
+  </div>
+
+  <div class="bottomNav">
+    <div class="navBtn" onclick="goHome()">🏠<br>Home</div>
+    <div class="navBtn" onclick="openComplaint()">📸<br>Complaint</div>
+    <div class="navBtn" onclick="showNotice()">📢<br>Notice</div>
+    <div class="navBtn" onclick="showProfile()">👤<br>Profile</div>
   </div>
 </div>
 
@@ -71,7 +92,7 @@ const GOOGLE_FORM_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeUPWZjLyAOw4
 const GOOGLE_SHEET_JSON_LINK = "https://docs.google.com/spreadsheets/d/1ucvPtqDwXeENkjp2bFSHdF-tYzAohXqLiYHyBt6kGp8/gviz/tq?tqx=out:json";
 
 let users = [
-  { id:"ADMIN", pass:"1234", name:"Mahesh Admin", mobile:"98xxxxxxx", address:"Gaav", role:"Admin" },
+  { id:"ADMIN", pass:"1234", name:"Mahesh Admin", mobile:"98xxxxxxx", address:"Tiruka", role:"Admin" },
   { id:"GAAV001", pass:"1234", name:"Ramesh", mobile:"97xxxxxxx", address:"Wasti 1", role:"User" },
   { id:"GAAV002", pass:"1234", name:"Suresh", mobile:"96xxxxxxx", address:"Wasti 2", role:"User" }
 ];
@@ -86,7 +107,7 @@ function login(){
 
   if(user){
     currentUser = user;
-    localStorage.setItem("smartgaav_user", JSON.stringify(user));
+    localStorage.setItem("smarttiruka_user", JSON.stringify(user));
     openApp();
   } else {
     alert("Wrong ID or Password");
@@ -107,7 +128,7 @@ function openApp(){
 }
 
 window.onload = function(){
-  let saved = localStorage.getItem("smartgaav_user");
+  let saved = localStorage.getItem("smarttiruka_user");
   if(saved){
     currentUser = JSON.parse(saved);
     openApp();
@@ -115,8 +136,12 @@ window.onload = function(){
 }
 
 function logout(){
-  localStorage.removeItem("smartgaav_user");
+  localStorage.removeItem("smarttiruka_user");
   location.reload();
+}
+
+function goHome(){
+  document.getElementById("complaintBox").classList.add("hidden");
 }
 
 function openComplaint(){
@@ -147,7 +172,6 @@ function loadComplaints(showBox=true){
       }));
 
       updateStats();
-
       if(showBox) renderComplaints(allComplaints);
     })
     .catch(err => {
@@ -242,7 +266,7 @@ function showDirectory(){
 }
 
 function showAdmin(){
-  alert("👑 Admin Panel:\nTotal complaints dashboard active ahe.\nSearch/filter complaint list madhe available ahe.");
+  alert("👑 Admin Panel:\nDashboard active ahe.\nComplaints list + search/filter available ahe.");
 }
 </script>
 

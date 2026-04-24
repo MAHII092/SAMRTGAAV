@@ -4,13 +4,14 @@
   <title>Smart Tiruka</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#064e3b">
-
   <style>
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial;background:linear-gradient(135deg,#0f172a,#064e3b);color:white;min-height:100vh}
     .center{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
     .card{width:100%;max-width:430px;background:rgba(255,255,255,.12);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2);border-radius:26px;padding:25px}
-    .logo{width:70px;height:70px;border-radius:22px;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;margin-bottom:15px}
+    .logo,.miniLogo{background:#22c55e;display:flex;align-items:center;justify-content:center;font-weight:900}
+    .logo{width:70px;height:70px;border-radius:22px;font-size:28px;margin-bottom:15px}
+    .miniLogo{width:48px;height:48px;border-radius:16px;font-size:20px}
     input,select,button{width:100%;padding:14px;margin:8px 0;border-radius:15px;border:0;font-size:15px}
     input,select{background:white;color:#111}
     button{background:#22c55e;color:white;font-weight:bold;cursor:pointer}
@@ -19,28 +20,35 @@
     .small{font-size:13px;color:#d1fae5}
     .top{padding:18px;max-width:900px;margin:auto;padding-bottom:95px}
     .header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-    .miniLogo{width:48px;height:48px;border-radius:16px;background:#22c55e;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px}
 
-    .banner{
-      position:sticky;top:10px;z-index:999;
-      padding:14px;border-radius:18px;margin:12px 0;
-      background:linear-gradient(90deg,#ef4444,#f97316);
-      border:1px solid rgba(248,113,113,.6);
-      font-weight:bold;box-shadow:0 10px 30px rgba(0,0,0,.35);
-      animation:blink 1.5s infinite;
+    .noticePanel{
+      position:sticky;top:8px;z-index:999;
+      background:rgba(15,23,42,.92);
+      backdrop-filter:blur(18px);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:20px;
+      padding:12px;
+      margin:12px 0;
+      box-shadow:0 10px 30px rgba(0,0,0,.35)
     }
-    @keyframes blink{0%{opacity:1}50%{opacity:.68}100%{opacity:1}}
+    .noticeHead{font-weight:bold;margin-bottom:8px;color:#fde68a}
+    .noticeItem{
+      background:rgba(239,68,68,.22);
+      border:1px solid rgba(248,113,113,.5);
+      padding:10px;border-radius:14px;margin-bottom:8px
+    }
+    .noticeTime{font-size:12px;color:#ffedd5;margin-top:4px}
 
     .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:15px 0}
-    .stat{background:rgba(255,255,255,.13);padding:14px;border-radius:18px;text-align:center;border:1px solid rgba(255,255,255,.14)}
+    .stat{background:rgba(255,255,255,.13);padding:14px;border-radius:18px;text-align:center}
     .stat b{font-size:24px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
     .tile{background:rgba(255,255,255,.15);padding:18px;border-radius:20px;text-align:center;border:1px solid rgba(255,255,255,.18);cursor:pointer;min-height:88px}
     .tile span{font-size:26px}
     .list{margin-top:18px;background:rgba(255,255,255,.10);padding:15px;border-radius:20px;max-height:520px;overflow:auto}
-    .item{background:rgba(255,255,255,.12);padding:12px;border-radius:15px;margin-bottom:10px;text-align:left;border:1px solid rgba(255,255,255,.15)}
+    .item{background:rgba(255,255,255,.12);padding:12px;border-radius:15px;margin-bottom:10px;text-align:left}
     a{color:#86efac}
-    .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px;border-top:1px solid rgba(255,255,255,.15)}
+    .bottomNav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px}
     .navBtn{text-align:center;font-size:12px;color:#d1fae5;padding:6px;border-radius:14px}
   </style>
 </head>
@@ -69,7 +77,7 @@
       </div>
     </div>
 
-    <div id="noticeBanner" class="banner hidden"></div>
+    <div id="noticePanel" class="noticePanel hidden"></div>
 
     <button onclick="enableNotifications()">🔔 Allow Notifications</button>
 
@@ -146,7 +154,6 @@ function openApp(){
     document.getElementById("statsBox").classList.remove("hidden");
     loadComplaints(false);
   }
-
   loadNotices();
 }
 
@@ -177,8 +184,14 @@ function enableNotifications(){
     return;
   }
   Notification.requestPermission().then(permission => {
-    if(permission === "granted") alert("Notifications allowed ✅");
-    else alert("Notifications allow nahi kele.");
+    alert(permission === "granted" ? "Notifications allowed ✅" : "Notifications allow nahi kele.");
+  });
+}
+
+function autoNow(){
+  return new Date().toLocaleString("en-IN", {
+    day:"2-digit", month:"2-digit", year:"numeric",
+    hour:"2-digit", minute:"2-digit", hour12:true
   });
 }
 
@@ -193,39 +206,43 @@ function loadNotices(){
         no:index+1,
         title:r.c[0]?.v || "Notice",
         message:r.c[1]?.v || "",
-        date:r.c[2]?.f || r.c[2]?.v || "",
+        date:r.c[2]?.f || r.c[2]?.v || autoNow(),
         type:r.c[3]?.v || "Normal"
       })).reverse();
 
-      showFloatingNotice();
+      showNoticeList();
     })
-    .catch(err => {
-      console.log("Notice error", err);
-    });
+    .catch(err => console.log("Notice error", err));
 }
 
-function showFloatingNotice(){
-  const banner = document.getElementById("noticeBanner");
+function showNoticeList(){
+  const panel = document.getElementById("noticePanel");
 
   if(allNotices.length === 0){
-    banner.classList.add("hidden");
+    panel.classList.add("hidden");
     return;
   }
 
-  let noticeText = allNotices.map(n => {
-    let icon = n.type.toLowerCase() === "urgent" ? "🚨" : "📢";
-    return `${icon} ${n.title} - ${n.message} (${n.date})`;
-  }).join("   •   ");
+  let html = `<div class="noticeHead">📢 Latest Notices</div>`;
 
-  banner.classList.remove("hidden");
-  banner.innerHTML = `<marquee behavior="scroll" direction="left" scrollamount="5">${noticeText}</marquee>`;
+  allNotices.slice(0,4).forEach(n => {
+    html += `
+      <div class="noticeItem">
+        <b>${n.type.toLowerCase()==="urgent" ? "🚨" : "📌"} ${n.title}</b><br>
+        ${n.message}
+        <div class="noticeTime">🕒 ${n.date || autoNow()}</div>
+      </div>
+    `;
+  });
+
+  panel.innerHTML = html;
+  panel.classList.remove("hidden");
 
   let latest = allNotices[0];
   let lastNotice = localStorage.getItem("last_notice_title");
 
-  if(lastNotice !== latest.title){
+  if(latest && lastNotice !== latest.title){
     localStorage.setItem("last_notice_title", latest.title);
-
     if("Notification" in window && Notification.permission === "granted"){
       new Notification("📢 Smart Tiruka Notice", {
         body: latest.title + " - " + latest.message
@@ -238,11 +255,7 @@ setInterval(loadNotices, 60000);
 
 function loadComplaints(showBox=true){
   const box = document.getElementById("contentBox");
-
-  if(showBox){
-    box.classList.remove("hidden");
-    box.innerHTML = "Loading complaints...";
-  }
+  if(showBox){box.classList.remove("hidden");box.innerHTML="Loading complaints...";}
 
   fetch(COMPLAINT_SHEET)
     .then(res => res.text())
@@ -250,7 +263,7 @@ function loadComplaints(showBox=true){
       let json = JSON.parse(data.substr(47).slice(0,-2));
       let rows = json.table.rows;
 
-      allComplaints = rows.map((r, index) => ({
+      allComplaints = rows.map((r,index)=>({
         no:index+1,
         userId:r.c[0]?.v || "N/A",
         name:r.c[1]?.v || "N/A",
@@ -263,76 +276,61 @@ function loadComplaints(showBox=true){
       updateStats();
 
       if(showBox){
-        if(currentUser.role === "Admin"){
-          renderComplaints(allComplaints, "📋 All Complaints");
-        }else{
-          renderComplaints(allComplaints.filter(c => c.userId === currentUser.id), "📋 My Complaints");
-        }
+        if(currentUser.role==="Admin") renderComplaints(allComplaints,"📋 All Complaints");
+        else renderComplaints(allComplaints.filter(c=>c.userId===currentUser.id),"📋 My Complaints");
       }
     })
-    .catch(err => {
-      box.innerHTML = "Error: Complaint sheet public nahi kiwa link wrong ahe.";
-    });
+    .catch(err => box.innerHTML="Error: Complaint sheet public nahi kiwa link wrong ahe.");
 }
 
 function updateStats(){
   document.getElementById("totalCount").innerText = allComplaints.length;
-  document.getElementById("pendingCount").innerText = allComplaints.filter(c => c.status.toLowerCase().includes("pending")).length;
-  document.getElementById("doneCount").innerText = allComplaints.filter(c => c.status.toLowerCase().includes("done")).length;
+  document.getElementById("pendingCount").innerText = allComplaints.filter(c=>c.status.toLowerCase().includes("pending")).length;
+  document.getElementById("doneCount").innerText = allComplaints.filter(c=>c.status.toLowerCase().includes("done")).length;
 }
 
-function showComplaints(){
-  loadComplaints(true);
-}
+function showComplaints(){loadComplaints(true);}
 
-function renderComplaints(list, title){
-  const box = document.getElementById("contentBox");
+function renderComplaints(list,title){
+  const box=document.getElementById("contentBox");
+  let html=`<h3>${title}</h3>
+  <input id="searchBox" placeholder="Search by name, problem, user id" oninput="filterComplaints()">
+  <select id="statusFilter" onchange="filterComplaints()">
+    <option value="all">All Status</option>
+    <option value="pending">Pending</option>
+    <option value="done">Done</option>
+    <option value="progress">In Progress</option>
+  </select>`;
 
-  let html = `
-    <h3>${title}</h3>
-    <input id="searchBox" placeholder="Search by name, problem, user id" oninput="filterComplaints()">
-    <select id="statusFilter" onchange="filterComplaints()">
-      <option value="all">All Status</option>
-      <option value="pending">Pending</option>
-      <option value="done">Done</option>
-      <option value="progress">In Progress</option>
-    </select>
-  `;
+  if(list.length===0) html+="<p>No complaints found.</p>";
 
-  if(list.length === 0) html += "<p>No complaints found.</p>";
-
-  list.forEach(c => {
-    html += `
-      <div class="item">
-        <b>#${c.no} - ${c.problem}</b><br>
-        👤 User: ${c.name} (${c.userId})<br>
-        📅 Date: ${c.date}<br>
-        📌 Status: ${c.status}<br>
-        ${c.photo ? `<a href="${c.photo}" target="_blank">📷 View Photo</a>` : ""}
-      </div>
-    `;
+  list.forEach(c=>{
+    html+=`<div class="item">
+      <b>#${c.no} - ${c.problem}</b><br>
+      👤 User: ${c.name} (${c.userId})<br>
+      📅 Date: ${c.date}<br>
+      📌 Status: ${c.status}<br>
+      ${c.photo ? `<a href="${c.photo}" target="_blank">📷 View Photo</a>` : ""}
+    </div>`;
   });
 
-  box.innerHTML = html;
+  box.innerHTML=html;
 }
 
 function filterComplaints(){
-  let q = document.getElementById("searchBox").value.toLowerCase();
-  let status = document.getElementById("statusFilter").value.toLowerCase();
+  let q=document.getElementById("searchBox").value.toLowerCase();
+  let status=document.getElementById("statusFilter").value.toLowerCase();
+  let sourceList=currentUser.role==="Admin"?allComplaints:allComplaints.filter(c=>c.userId===currentUser.id);
 
-  let sourceList = currentUser.role === "Admin"
-    ? allComplaints
-    : allComplaints.filter(c => c.userId === currentUser.id);
-
-  let filtered = sourceList.filter(c => {
-    let text = (c.userId + " " + c.name + " " + c.problem).toLowerCase();
-    let statusMatch = status === "all" || c.status.toLowerCase().includes(status);
+  let filtered=sourceList.filter(c=>{
+    let text=(c.userId+" "+c.name+" "+c.problem).toLowerCase();
+    let statusMatch=status==="all" || c.status.toLowerCase().includes(status);
     return text.includes(q) && statusMatch;
   });
 
-  renderComplaints(filtered, currentUser.role === "Admin" ? "📋 All Complaints" : "📋 My Complaints");
-  document.getElementById("searchBox").value = q;
-  document.getElementById("statusFilter").value = status;
+  renderComplaints(filtered,currentUser.role==="Admin"?"📋 All Complaints":"📋 My Complaints");
+  document.getElementById("searchBox").value=q;
+  document.getElementById("statusFilter").value=status;
 }
 
 function showEmergency(){
@@ -340,7 +338,7 @@ function showEmergency(){
 }
 
 function showProfile(){
-  alert("👤 Profile:\nName: " + currentUser.name + "\nID: " + currentUser.id + "\nMobile: " + currentUser.mobile + "\nAddress: " + currentUser.address);
+  alert("👤 Profile:\nName: "+currentUser.name+"\nID: "+currentUser.id+"\nMobile: "+currentUser.mobile+"\nAddress: "+currentUser.address);
 }
 
 function showYojana(){
@@ -352,7 +350,7 @@ function showDirectory(){
 }
 
 function showAdmin(){
-  alert("👑 Admin Panel:\nAll complaints + stats active.\nNotice top floating banner madhe live yete.");
+  alert("👑 Admin Panel:\nAll complaints + stats active.\nNotice top panel madhe one-by-one diste.");
 }
 </script>
 
